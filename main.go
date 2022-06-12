@@ -11,29 +11,11 @@ import (
 )
 
 func main() {
-	/*	http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
-			log.Println("Hello world")
-			d, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				http.Error(rw, "Oops an error", http.StatusBadRequest)
-				return
-			}
-
-			fmt.Fprintf(rw, "Hello %s", d)
-		})
-
-		http.HandleFunc("/goodbye", func(_w http.ResponseWriter, _r *http.Request) {
-			log.Println("Goodbye world")
-		})
-		http.ListenAndServe(":9999", nil)*/
-
 	l := log.New(os.Stdout, "[product-api] ", log.LstdFlags)
-	hh := handlers.NewHello(l)
-	gh := handlers.NewGoodbye(l)
+	ph := handlers.NewProduct(l)
 
 	sm := http.NewServeMux()
-	sm.Handle("/", hh)
-	sm.Handle("/goodbye", gh)
+	sm.Handle("/", ph)
 
 	s := &http.Server{
 		Addr:         ":9998",
