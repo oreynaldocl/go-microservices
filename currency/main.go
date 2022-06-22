@@ -1,7 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
+	"working/currency/protos"
+	"working/currency/server"
+)
 
 func main() {
-	fmt.Println("Hello, World!")
+	log := hclog.Default()
+	gs := grpc.NewServer()
+	cs := server.NewCurrency(log)
+
+	protos.RegisterCurrencyServer(gs, cs)
+	fmt.Println("Hello, World!", gs, log)
 }
