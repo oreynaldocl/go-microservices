@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"net"
+	"os"
 	"working/currency/protos"
 	"working/currency/server"
 )
@@ -14,5 +16,13 @@ func main() {
 	cs := server.NewCurrency(log)
 
 	protos.RegisterCurrencyServer(gs, cs)
-	fmt.Println("Hello, World!", gs, log)
+	//Disable in production
+	reflection.Register(gs)
+
+	listen, err := net.Listen("tcp", ":9092")
+	if err != nil {
+		log.Error("Unable to listen", "error", err)
+		os.Exit(1)
+	}
+	gs.Serve(listen)
 }

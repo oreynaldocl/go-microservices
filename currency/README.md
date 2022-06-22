@@ -23,3 +23,53 @@ protoc -I ./proto \
    --go-grpc_out ./proto --go-grpc_opt paths=source_relative require_unimplemented_servers=false \
    ./proto/currency.proto
 ```
+# Test GRPC
+Not possible to use curl, but we can make UT
+## Install grpcurl
+Install and run following changes
+```shell
+go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+# Add following line in main.go
+#	reflection.Register(gs)
+```
+Note: Run commands in BASH, json format is different for powershell
+After that it is possible to run following lines:
+```shell
+ ~  grpcurl --plaintext localhost:9092 list
+Failed to list services: server does not support the reflection API
+
+ ~  grpcurl --plaintext localhost:9092 list Currency
+Failed to list methods for service "Currency": server does not support the reflection API
+
+ ~  grpcurl --plaintext localhost:9092 list Currency
+Currency.GetRate
+
+ ~  grpcurl --plaintext localhost:9092 list
+Currency
+grpc.reflection.v1alpha.ServerReflection
+
+ ~  grpcurl --plaintext localhost:9092 list Currency
+Currency.GetRate
+
+ ~  grpcurl --plaintext localhost:9092 describe Currency.GetRate
+Currency.GetRate is a method:
+rpc GetRate ( .RateRequest ) returns ( .RateResponse );
+
+ ~  grpcurl --plaintext localhost:9092 describe .RateRequest
+RateRequest is a message:
+message RateRequest {
+  string Base = 1;
+  string Destination = 2;
+}
+
+ ~  grpcurl --plaintext localhost:9092 describe .RateResponse
+RateResponse is a message:
+message RateResponse {
+  float Rate = 1;
+}
+
+ ~  grpcurl --plaintext -d '{"base":"GBP","destination":"US"}' localhost:9092 Currency.GetRate
+{
+  "Rate": 0.5
+}
+```
