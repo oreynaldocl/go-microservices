@@ -20,3 +20,4 @@
 # Editors
 .DS_Store
 .idea
+*.iml

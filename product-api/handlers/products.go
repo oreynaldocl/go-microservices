@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
-	"working/data"
+	"working/product-api/data"
 )
 
 type Products struct {
