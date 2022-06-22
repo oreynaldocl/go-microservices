@@ -6,6 +6,8 @@ Run following line
 protoc -I protos/ protos/currency.proto --go_out=plugins=grpc:protos/currency
 # OFFICIAL https://grpc.io/docs/languages/go/quickstart/#regenerate-grpc-code
 protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative protos/currency.proto
+# adding require_unimplemented_servers=false https://github.com/grpc/grpc-go/issues/3794#issuecomment-725860916
+protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative --go-grpc_opt=require_unimplemented_servers=false protos/currency.proto
 ```
 The difference could be by the version difference
 
@@ -20,5 +22,4 @@ protoc -I ./proto \
    --go_out ./proto --go_opt paths=source_relative \
    --go-grpc_out ./proto --go-grpc_opt paths=source_relative require_unimplemented_servers=false \
    ./proto/currency.proto
-
 ```
