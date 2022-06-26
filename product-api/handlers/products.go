@@ -66,13 +66,25 @@ func (ph Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, rh *http.Request) {
 		ph.log.Println("Handle MiddlewareValidateProduct")
 
-		// Creates a product
+		// Create a product
 		product := data.Product{}
 		// Create a pointer of the product
 		//product := &data.Product{} // *product := &data.Product{}
 		err := product.FromJSON(rh.Body)
 		if err != nil {
-			http.Error(rw, "Unable to unmarshal json", http.StatusBadRequest)
+			ph.log.Println("[ERROR] deserializing product", err)
+			http.Error(rw, "Error reading product", http.StatusBadRequest)
+			return
+		}
+
+		err = product.Validate()
+		if err != nil {
+			ph.log.Println("[ERROR] validating product", err)
+			http.Error(
+				rw,
+				fmt.Sprintf("Error validating product: %s", err),
+				http.StatusBadRequest,
+			)
 			return
 		}
 
