@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"github.com/gorilla/mux"
 	"log"
@@ -17,7 +18,7 @@ func NewProduct(l *log.Logger) *Products {
 	return &Products{l}
 }
 
-func (ph *Products) GetProducts(rw http.ResponseWriter, _ *http.Request) {
+func (ph Products) GetProducts(rw http.ResponseWriter, _ *http.Request) {
 	ph.log.Println("Handle GET Products")
 	lp := data.GetProducts()
 	err := lp.ToJSON(rw)
@@ -26,20 +27,15 @@ func (ph *Products) GetProducts(rw http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func (ph *Products) AddProduct(rw http.ResponseWriter, rh *http.Request) {
+func (ph Products) AddProduct(rw http.ResponseWriter, rh *http.Request) {
 	ph.log.Println("Handle POST Product")
 
-	product := &data.Product{}
-	err := product.FromJSON(rh.Body)
-	if err != nil {
-		http.Error(rw, "Unable to unmarshal json", http.StatusBadRequest)
-		return
-	}
+	product := rh.Context().Value(KeyProduct{}).(data.Product)
 
-	data.AddProduct(product)
+	data.AddProduct(&product)
 }
 
-func (ph *Products) UpdateProduct(rw http.ResponseWriter, rh *http.Request) {
+func (ph Products) UpdateProduct(rw http.ResponseWriter, rh *http.Request) {
 	vars := mux.Vars(rh)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -49,14 +45,9 @@ func (ph *Products) UpdateProduct(rw http.ResponseWriter, rh *http.Request) {
 
 	ph.log.Println("Handle PUT Product", id)
 
-	product := &data.Product{}
-	err = product.FromJSON(rh.Body)
-	if err != nil {
-		http.Error(rw, "Unable to unmarshal json", http.StatusBadRequest)
-		return
-	}
+	product := rh.Context().Value(KeyProduct{}).(data.Product)
 
-	err = data.UpdateProduct(id, product)
+	err = data.UpdateProduct(id, &product)
 	if err == data.ErrProductNotFound {
 		http.Error(rw, "Product not found", http.StatusNotFound)
 		return
@@ -66,4 +57,28 @@ func (ph *Products) UpdateProduct(rw http.ResponseWriter, rh *http.Request) {
 		return
 	}
 
+}
+
+type KeyProduct struct{}
+
+func (ph Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
+	// ph *Products required for modify the ph class, without it, it is just readonly
+	return http.HandlerFunc(func(rw http.ResponseWriter, rh *http.Request) {
+		ph.log.Println("Handle MiddlewareValidateProduct")
+
+		// Creates a product
+		product := data.Product{}
+		// Create a pointer of the product
+		//product := &data.Product{} // *product := &data.Product{}
+		err := product.FromJSON(rh.Body)
+		if err != nil {
+			http.Error(rw, "Unable to unmarshal json", http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.WithValue(rh.Context(), KeyProduct{}, product)
+		rh = rh.WithContext(ctx)
+
+		next.ServeHTTP(rw, rh)
+	})
 }
