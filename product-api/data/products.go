@@ -2,12 +2,12 @@ package data
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/go-playground/validator/v10"
 	"io"
 	"regexp"
-	"time"
 )
+
+//region struct
 
 // Product defines the structure for an API product
 // https://pkg.go.dev/encoding/json#Marshal definition for JSON Marshal
@@ -34,6 +34,9 @@ func (p Product) Validate() error {
 	return validate.Struct(p)
 }
 
+//endregion struct
+
+//region utilities
 func validateSKU(fieldLevel validator.FieldLevel) bool {
 	format := regexp.MustCompile(`[a-z]+-[a-z]+-[a-z]+`)
 	matches := format.FindAllString(fieldLevel.Field().String(), -1)
@@ -44,70 +47,4 @@ func validateSKU(fieldLevel validator.FieldLevel) bool {
 	return true
 }
 
-// Products is a collection of Product ********************
-type Products []*Product
-
-func (p *Products) ToJSON(w io.Writer) error {
-	e := json.NewEncoder(w)
-	return e.Encode(p)
-}
-
-// Utilities ******************
-
-func GetProducts() Products {
-	return productList
-}
-
-func AddProduct(p *Product) {
-	p.ID = getNextID()
-	productList = append(productList, p)
-}
-
-func UpdateProduct(id int, prod *Product) error {
-	_, pos, err := findProduct(id)
-	if err != nil {
-		return err
-	}
-	prod.ID = id
-	productList[pos] = prod
-	return nil
-}
-
-var ErrProductNotFound = fmt.Errorf("product not found")
-
-func findProduct(id int) (*Product, int, error) {
-	for index, prod := range productList {
-		if prod.ID == id {
-			return prod, index, nil
-		}
-	}
-	return nil, -1, ErrProductNotFound
-}
-
-func getNextID() int {
-	lp := productList[len(productList)-1]
-	return lp.ID + 1
-}
-
-// productList is a hard coded list of products for this
-// example data source
-var productList = []*Product{
-	&Product{
-		ID:          1,
-		Name:        "Latte",
-		Description: "Frothy milky coffee",
-		Price:       2.45,
-		SKU:         "abc323",
-		CreatedOn:   time.Now().UTC().String(),
-		UpdatedOn:   time.Now().UTC().String(),
-	},
-	&Product{
-		ID:          2,
-		Name:        "Espresso",
-		Description: "Short and strong coffee without milk",
-		Price:       1.99,
-		SKU:         "fjd34",
-		CreatedOn:   time.Now().UTC().String(),
-		UpdatedOn:   time.Now().UTC().String(),
-	},
-}
+//endregion utilities
